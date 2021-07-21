@@ -1,0 +1,75 @@
+import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
+# Press Shift+F10 to execute it or replace it with your code.
+# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# Change File Directories Below in the Variables for different files
+FileDirBank = []
+
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\FullCycle Graph Testing\noexo.STO")
+#NoExo
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\FullCycle Graph Testing\hip.STO")
+#Hip
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\FullCycle Graph Testing\knee.STO")
+#Knee
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\FullCycle Graph Testing\ankle.STO")
+#Ankle
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\FullCycle Graph Testing\hipknee.STO")
+#HipKnee
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\FullCycle Graph Testing\hipankle.STO")
+#HipAnkle
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\FullCycle Graph Testing\kneeankle.STO")
+#KneeAnkle
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\FullCycle Graph Testing\all.STO")
+#All
+
+# Enter Column Number of Variable You Want to Plot Below (1st Column = Column 0)
+col = 1
+# Enter Title and Axis Labels of Graph Below
+title = "Comparison overtime of GRF, vy"
+XLabel = "Gait Percentage (%)"
+YLabel = "GRF"
+# Enter Size of Header in Number of Lines
+HeaderSize = 5
+name = ["NoExo", "Hip", "Knee", "Ankle", "HipKnee", "HipAnkle", "KneeAnkle", "All"]
+file1 = open(FileDirBank[0], "r")
+bob = file1.readlines()
+num = bob[4].split()
+it = len(num)
+xvals = []
+yvals = []
+for col in range(it):
+    x = 0
+    xvals.clear()
+    yvals.clear()
+    counter = 0
+    for x in range(8):
+        file = open(FileDirBank[x], "r")
+        xvals.clear()
+        yvals.clear()
+        counter = 0
+        for y in file:
+            temp = y.split()
+            if counter < HeaderSize:
+                if counter == 4:
+                   YLabel = temp[col].replace("/", "_")
+                   YLabel = YLabel.replace("|", "_")
+                    #num = YLabel.rfind("_")
+                    #title = YLabel[0:num]
+                   title = YLabel
+                   counter = counter + 1
+                else:
+                    counter = counter + 1
+            #Changing Time to GAIT CYCLE
+            else:
+                change = float(temp[0])*100
+                xvals.append(change)
+                yvals.append(float(temp[col]))
+        plt.plot(xvals, yvals)
+    plt.title(title)
+    fontP = FontProperties()
+    fontP.set_size('x-small')
+    plt.legend(name, title='Legend', bbox_to_anchor=(.95, 1), loc='upper left', prop=fontP)
+    plt.xlabel(XLabel)
+    plt.ylabel(YLabel)
+    plt.savefig(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Graphs\ " + YLabel)
+    plt.close()
