@@ -1,1 +1,279 @@
+#Created by Niranjan Deepak, Middlesex County Academy for STEM
+#Data Analyzer/Grapher for OpenSim Simulation Data
+import matplotlib.pyplot as plt
+import sys
+import numpy as np
+from matplotlib.pyplot import figure
+from matplotlib.font_manager import FontProperties
+from numpy import random
+
+#Variable(Do Not Alter)
+previousnum = sys.float_info.min
+previousx=0
+range1 = 0
+maxrange = [0, 0, 0]
+start = 0
+previousnum1 = sys.float_info.min
+previousx1=0
+range2 = 0
+maxrange1 = [0, 0, 0]
+start1 = 0
+xvals = []
+yvals = []
+whatdata =-1
+rows, cols = (8, 2)
+constmaxrange = [[0]*cols]*rows
+whatdata=[False, False, False, False, False,False,False,False ]
+whenup=0
+whenupbackup=[0,0,0,0,0,0,0,0]
+# foot down function
+#set threshold for foot down force
+threshold = 20
+def footdown(next, x):
+    global previousnum
+    global previousx
+    global start
+    global maxrange
+    global range1
+    global threshold
+    if(x==0):
+        previousnum = next
+        previousx = x
+    elif ((next-previousnum)/(xvals[x]-xvals[previousx]))>0:
+        previousnum = next
+        previousx= x
+        if (next>threshold) & (next <threshold+5):
+            start = x
+            maxrange[1] = start
+    else:
+        previousnum = next
+        previousx = x
+        maxrange[2]= x-1
+        if x==len(xvals):
+            maxrange[2] = x
+    if x == len(xvals)-1:
+        maxrange[2] = x
+
+# foot up function
+#Set Normalized Force Threshold for foot up
+thresholdup=.01
+def footup(next, x):
+    global previousnum1
+    global start1
+    global maxrange1
+    global range2
+    global previousx1
+    global whenup
+    if(x==0):
+        previousnum1 = next
+        previousx1 = x
+    elif (((next-previousnum1)/(xvals[x]-xvals[previousx1])) <= 0):
+        previousnum1 = next
+        previousx1 = x
+        if next <thresholdup:
+            if whenup == 0:
+                whenup = x
+    else:
+        previousnum1 = next
+        previousx1 = x
+
+#Shift function
+def shift(start, end):
+    shiftb=0
+    shifte=0
+    output =[]
+    for m in range(len(xvals)):
+        if xvals[m]>=start:
+            shiftb=m
+            break
+    for o in range(len(xvals)-1, -1, -1):
+        if xvals[o] <= end:
+            shifte = o
+            break
+    for f in range(shiftb, shifte+1):
+        output.append(yvals[f])
+    if shifte<len(xvals):
+        for j in range(shifte+1 ,len(xvals)):
+            output.append(yvals[j])
+    if shiftb > 0:
+        for k in range(0,shiftb):
+            output.append(yvals[k])
+    return output
+
+# Change File Directories Below in the Variables for different files
+FileDirBank = []
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Case 2 Graphs\FullCycle Graph Testing\all.STO")
+#All
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Case 2 Graphs\FullCycle Graph Testing\noexo.STO")
+#NoExo
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Case 2 Graphs\FullCycle Graph Testing\hip.STO")
+#Hip
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Case 2 Graphs\FullCycle Graph Testing\knee.STO")
+#Knee
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Case 2 Graphs\FullCycle Graph Testing\ankle.STO")
+#Ankle
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Case 2 Graphs\FullCycle Graph Testing\hipkneep.STO")
+#HipKnee
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Case 2 Graphs\FullCycle Graph Testing\hipankle.STO")
+#HipAnkle
+FileDirBank.append(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Case 2 Graphs\FullCycle Graph Testing\kneeankle.STO")
+#KneeAnkle
+
+#Dictionary with names
+Dict = {'ground_force_r_vy': 'Vertical GRF Right','time': 'Time', 'ground_force_r_vx': "Horizontal GRF Right",
+        'ground_force_l_px': 'GRF PX Left', 'ground_force_l_py' : 'GRF PY Left', 'ground_force_l_pz': 'GRF PZ Left', 'ground_force_l_vx':'Horizontal GRF Left','ground_force_l_vy':'Vertical GRF Left',
+        'ground_force_l_vz': 'GRF VZ Left', 'ground_force_r_px': 'GRF PX Right', 'ground_force_r_py': 'GRF PY Right','ground_force_r_pz': 'GRF PZ Right', 'ground_force_r_vz': 'GRF VZ Right',
+        'ground_torque_l_x': 'Horizontal Left Torque', 'ground_torque_l_y': 'Vertical Left Torque', 'ground_torque_l_z': 'Z Left Torque', 'ground_torque_r_x': 'Horizontal Right Torque',
+        'ground_torque_r_y': 'Vertical Right Torque', 'ground_torque_r_z': 'Z Right Torque'}
+
+#Change colors here
+colorline=['b','r','g', 'c','m','y','k','orange']
+# Enter Default Axis Title/Main Title Below
+title = "Comparison overtime of GRF, vy"
+XLabel = "Gait Percentage (%)"
+YLabel = "GRF"
+# Enter Size of Header in Number of Lines
+HeaderSize = 5
+# Enter Names of Lines Plotted Below
+name = ["All","NoExo", "Hip", "Knee", "Ankle", "HipKnee", "HipAnkle", "KneeAnkle"]
+
+#Calculating Number of Graphing Iterations
+file1 = open(FileDirBank[0], "r")
+bob = file1.readlines()
+num = bob[HeaderSize-1].split()
+it = len(num)
+
+#Setting/Reading Data Storage Files
+    #When graphing GRF Data, you need to change 'r' to 'r+'
+    #When your not graphing GRF Data, you need to change 'r+' to 'r'
+shiftfile = open(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Graphs\Shift.txt", 'r')
+footupfile = open(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Graphs\footup.txt", 'r')
+whenupbackup=footupfile.readlines()
+tempshiftdata = shiftfile.readlines()
+
+
+for col in range(it):
+    #Setting Graph Title/Variable to be graphed
+    file = open(FileDirBank[0], "r")
+    content = file.readlines()
+    contenttemp = content[HeaderSize-1].split()
+    find = contenttemp[col]
+    YLabel = contenttemp[col].replace("/", "_")
+    YLabel = YLabel.replace("|", "_")
+    YLabel = YLabel.replace(":", "_")
+    #YLabel = Dict[YLabel]
+    title = YLabel
+
+    #Reseting Variables
+    xvals.clear()
+    yvals.clear()
+    counter = 0
+    x = 0
+
+    #Setting Size of Figure Below
+    figure(figsize=(12, 6), dpi=80)
+    for x in range(8):
+        #Taking Last X value to normalize X axis out of 100% Gait Cycle
+        contentforx = file.readlines()
+        contentforxline = contentforx[len(contentforx)-1].split()
+        xvalmax = contentforxline[0]
+
+        #Setting Default Values To Variables
+        columntrue = -1
+        xvals.clear()
+        yvals.clear()
+        counter = 0
+        GRFcounter = 0
+        previousnum = sys.float_info.min
+        maxrange = [0, 0, 0]
+        maxrange1 = [0, 0, 0]
+        start = 0
+        start1 = 0
+        range1 = 0
+        previousnum1 = sys.float_info.min
+        previousx1 = 0
+        previousx=0
+        whenup=0
+        #Opening Specific Line File Data
+        file = open(FileDirBank[x], "r")
+        for y in file:
+            temp = y.split()
+            #Matching Variable in File to Variable being Graphed
+            if counter == HeaderSize - 1:
+                for z in range(len(temp)):
+                    if (find == temp[z]):
+                        columntrue = z
+                        flag = 1
+                        break
+                counter = counter + 1
+            elif (YLabel == "Vertical GRF Right") & ((counter > HeaderSize-1) & (columntrue != -1)): #Vertical GRF Data Modification
+                #Changing Time to GAIT CYCLE
+                change = ((float(temp[0])) / (float(xvalmax))) * 100
+                xvals.append(change)
+                #Normalize GRF
+                yvals.append((float(temp[columntrue]))/(62*9.80665))
+                #Finding Occurence when foot is down
+                footdown(round(float(temp[columntrue])), GRFcounter)
+                GRFcounter = GRFcounter+1
+            elif counter > HeaderSize-1 & columntrue != -1: # All Data Modification
+                change = ((float(temp[0]))/(float(xvalmax))) * 100
+                # Changing Time to GAIT CYCLE
+                xvals.append(change)
+                yvals.append(float(temp[columntrue]))
+            elif counter > (HeaderSize-1) & columntrue == -1: #Variable in File Does Not Exist
+                break
+            else: #Keeping Track of Row Number in File
+                counter = counter + 1
+
+        if columntrue != -1:
+            if YLabel == "Vertical GRF Right": #Only occurs for Vertical GRF Data
+                # Figure out if Shift is necessary
+               if xvals[maxrange[1]] > 1: #Shift Needed
+                   yvals = shift(xvals[maxrange[1]], xvals[maxrange[2]])
+                   #Writing Down Shift Data into file
+                   whatdata[x] = True
+                   constmaxrange[x]=[maxrange[1], maxrange[2]]
+                   shiftfile.write(str(whatdata[x])+" "+str(maxrange[1])+" "+str(maxrange[2])+"\n")
+               else: #Shift not needed
+                   shiftfile.write(str(whatdata[x]) + "\n")
+            else: #Occurs for all data
+                #Takes data from shift file to apply to other graphs
+                if len(tempshiftdata)>0:
+                    splitdata=tempshiftdata[x].split()
+                    whatdata = eval(splitdata[0])
+                    if whatdata:
+                        constmaxrange[x]=[int(splitdata[1]),int(splitdata[2])]
+                        yvals = shift(xvals[constmaxrange[x][0]], xvals[constmaxrange[x][1]])
+            # Calculating Foot Up
+            if YLabel == "Vertical GRF Right":
+                for f in yvals:
+                    footup(float(f), c)
+                    c = c + 1
+            c = 0
+            #Graphing Data
+            plt.plot(xvals, yvals,label= name[x],color = colorline[x])
+            #Storing Foot up Data value into List
+            if YLabel == "Vertical GRF Right":
+                whenupbackup.append(whenup)
+            if len(whenupbackup)>0:
+                #Graphing Foot Up Line Markers
+                    # Comment out line below if you do not need it
+                plt.axvline(xvals[int(whenupbackup[x])], linestyle ='--', color = colorline[x])
+    #Storing Foot Up values into file
+    if YLabel == "Vertical GRF Right":
+        for ki in range (8):
+            footupfile.write(str(whenupbackup[ki])+"\n")
+    #Modifications to Graph format, color, and titles
+    plt.title(title)
+    fontP = FontProperties()
+    fontP.set_size(8)
+    plt.legend(bbox_to_anchor=(1, 1), loc = 'upper left',  prop=fontP)
+    plt.xlabel(XLabel)
+    plt.ylabel(YLabel)
+#Saving Figures and Closing Files
+    plt.savefig(r"C:\Users\Niranjan School\Documents\everything\NJIT INTERNSHIP\Graphs\ " + YLabel)
+    plt.close()
+shiftfile.close()
+footupfile.close()
+
 
